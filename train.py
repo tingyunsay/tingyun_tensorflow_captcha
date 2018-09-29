@@ -1,13 +1,23 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from gen_image import gen_captcha_text_and_image
 from gen_image import number
 from gen_image import alphabet
 from gen_image import ALPHABET
-
+import time
 import numpy as np
 import tensorflow as tf
+
+#使用gpu进行训练
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+#添加配置文件
+config = tf.ConfigProto(log_device_placement=True,allow_soft_placement=True)
+#使用显存最大占比
+config.gpu_options.per_process_gpu_memory_fraction = 0.9
+config.gpu_options.allow_growth = True
 
 text, image = gen_captcha_text_and_image()
 print("验证码图像channel:", image.shape)  # (60, 160, 3)
@@ -187,7 +197,7 @@ def train_crack_captcha_cnn():
 	accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 	saver = tf.train.Saver()
-	with tf.Session() as sess:
+	with tf.Session(config=config) as sess:
 		sess.run(tf.global_variables_initializer())
 
 		step = 0
@@ -210,4 +220,8 @@ def train_crack_captcha_cnn():
 			step += 1
 
 if __name__ == '__main__':
-	train_crack_captcha_cnn()
+    b_time = time.time()
+    train_crack_captcha_cnn()
+    e_time = time.time()
+    print("任务耗时: %s s"%(str(e_time-b_time)))
+
